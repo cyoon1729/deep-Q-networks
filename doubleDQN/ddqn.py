@@ -173,11 +173,12 @@ class DQNAgent:
 
         # compute loss
         curr_Q = self.model.forward(states).gather(1, actions)
-        next_Q = self.target_model.forward(next_states)
-        max_next_Q = torch.max(next_Q, 1)[0]
-        max_next_Q = max_next_Q.view(max_next_Q.size(0), 1)
-        expected_Q = rewards + (1 - dones) * self.gamma * max_next_Q
+
+        next_Q = self.model.forward(next_states)
+        next_Q_index = torch.max(next_Q,1)[1].unsqueeze(1)
         
+        expected_Q = rewards + (1 - dones) * self.gamma * self.target_model.forward(next_states).gather(1,next_Q_index) 
+
         loss = F.mse_loss(curr_Q, expected_Q.detach())
         
         return loss
