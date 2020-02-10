@@ -46,12 +46,12 @@ class PERAgent:
         next_states = torch.FloatTensor(next_states).to(self.device)
         dones = torch.FloatTensor(dones).to(self.device)
         IS_weights = torch.FloatTensor(IS_weights).to(self.device)
-
+        done_mask = torch.abs(dones - 1).reshape(batch_size,1)
         curr_Q = self.model.forward(states).gather(1, actions.unsqueeze(1))
         curr_Q = curr_Q.squeeze(1)
         next_Q = self.model.forward(next_states)
         max_next_Q = torch.max(next_Q, 1)[0]
-        expected_Q = rewards.squeeze(1) + self.gamma * max_next_Q
+        expected_Q = rewards.squeeze(1) + self.gamma * max_next_Q * done_mask
 
         td_errors = torch.pow(curr_Q - expected_Q, 2) * IS_weights
 
